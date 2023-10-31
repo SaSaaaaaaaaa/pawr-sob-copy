@@ -75,13 +75,21 @@ use Illuminate\Support\Str;
         {
             $request->validate([]);
             $model = Produk::findOrFail($id);
-            $model->status = $request->status;
-            $model->jadwal = $request->jadwal;
-            $model->jam = $request->jam;
-            $model->user()->associate($request->user_id);
-            $model->spesialis()->associate($request->spesialis_id);
+            $model->produk = $request->produk;
+            $model->deskripsi = $request->deskripsi;
+            $model->harga = $request->harga;
+
+            if ($request->hasFile('cover')) {
+                $file = $request->file('cover');
+                @unlink(storage_path('app/public/produk/' . $model->cover));
+                $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/produk', $filename);
+                $model->cover = $filename;
+            }
             $model->save();
-            return redirect('/produk')->with('success', 'Data produk berhasil diperbarui.');
+            $model->kategori()->associate($request->kategori_id);
+            $model->save();
+            return redirect('/admin/produk')->with('success', 'Data produk berhasil diperbarui.');
         }
 
         public function hapusprod($id)
